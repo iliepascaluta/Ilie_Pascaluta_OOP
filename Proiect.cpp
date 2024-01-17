@@ -116,8 +116,15 @@ public:
 		return os;
 	}
 	friend istream& operator>>(istream& is, actiune& a) {
+		char buffer[256];
+
 		cout << " Nume Actiune: ";
-		is.getline(a.nume_actiune,sizeof(a.nume_actiune)); 
+		if ( a.nume_actiune!= NULL)
+			delete[]a.nume_actiune;	
+		//is.getline(buffer, sizeof(buffer));
+		is >> buffer;
+		a.nume_actiune = new char[strlen(buffer) + 1];
+		strcpy(a.nume_actiune, buffer);
 		cout << " Volum Mediu: ";
 		is >> a.volum_mediu;
 		cout << " Pret: ";
@@ -210,8 +217,13 @@ public:
 		return os;
 	}
 	friend istream& operator>>(istream& is, obligatiune& o) {
+		if (o.emitent != NULL) 
+			delete[] o.emitent;
+		char buffer[256];
 		cout << " Emitent: ";
-		is.getline(o.emitent, sizeof(o.emitent));
+		is >> buffer;
+		o.emitent = new char[strlen(buffer) + 1];
+		strcpy(o.emitent, buffer);
 		cout << " Maturitate (ani): ";
 		is >> o.maturitate;
 		cout << " Dobanda: ";
@@ -280,11 +292,11 @@ public:
 		delete[] nume_indice;
 	}
 	void afisare_indice() {
-		cout << "Indicele " << nume_indice
-			<< " compus din " << nr_actiuni_componente
-			<< "  de actiuni a inregistrat in ultimul an o performanta de " << randament_anual << "%. "
-			<< " Acest indice bursier a oferit in trecut un randament mediu (anualizat) de " << randament_istoric_anualizat << "%."
-			<< "In prezent se tranzactioneaza la pretul de " << pret
+		cout << "Indicele " << this->nume_indice
+			<< " compus din " << this->nr_actiuni_componente
+			<< "  de actiuni a inregistrat in ultimul an o performanta de " << this->randament_anual << "%. "
+			<< " Acest indice bursier a oferit in trecut un randament mediu (anualizat) de " << this->randament_istoric_anualizat << "%."
+			<< "In prezent se tranzactioneaza la pretul de " << this->pret
 			<< endl;
 
 	}
@@ -313,7 +325,12 @@ public:
 	}
 	friend istream& operator>>(istream& iS, indice_de_actiuni& i) {
 		cout << "Nume indice bursier: ";
-		iS >> i.nume_indice;
+		if (i.nume_indice != NULL) 
+			delete[] i.nume_indice;
+		char buffer[256];  
+		iS >> buffer;
+		i.nume_indice = new char[strlen(buffer) + 1];
+		strcpy(i.nume_indice, buffer);
 		cout << "Nr actiuni componente: ";
 		iS >> i.nr_actiuni;
 		cout << "Performanta inregistrata in ultimul an: ";
@@ -335,7 +352,12 @@ public:
 	}
 	friend ifstream& operator>>(ifstream& file, indice_de_actiuni& i) {
 		cout << "Nume indice bursier: ";
-		file >> i.nume_indice;
+		if (i.nume_indice != NULL)
+			delete[] i.nume_indice;
+		char buffer[256];
+		file >> buffer;
+		i.nume_indice = new char[strlen(buffer) + 1];
+		strcpy(i.nume_indice, buffer);
 		cout << "Nr actiuni componente: ";
 		file >> i.nr_actiuni;
 		cout << "Performanta inregistrata in ultimul an: ";
@@ -360,18 +382,18 @@ class indice_de_actiuni_de_sector : public indice_de_actiuni {
 
 public:
 
-	/*indice_de_actiuni_de_sector(string sector_economic, float randament_anual_sector) 
+	indice_de_actiuni_de_sector(string sector_economic, float randament_anual_sector) 
 						: indice_de_actiuni(nume_indice, nr_actiuni, pret, randament_anual, randament_istoric_anualizat)  {
 	this->sector_economic = sector_economic;
 	this->randament_anual_sector = randament_anual_sector;
-	}*/
+	}
 
-	indice_de_actiuni_de_sector(string sector_economic, float randament_anual_sector, char* nume, int nr_actiuni, int pret, float randament_anual, float randament_istoric_anualizat)
+	/*indice_de_actiuni_de_sector(string sector_economic, float randament_anual_sector, char* nume, int nr_actiuni, int pret, float randament_anual, float randament_istoric_anualizat)
 		: indice_de_actiuni(nume, nr_actiuni, pret, randament_anual, randament_istoric_anualizat),
 		sector_economic(sector_economic),
 		randament_anual_sector(randament_anual_sector) {
 		
-	}
+	}*/
 	string get_sector(){
 		return this->sector_economic;
 	}
@@ -384,7 +406,13 @@ public:
 	void set_randament(float randament) {
 		this->randament_anual = randament;
 	}
-	
+	void afisare() {
+		cout << "Actiunile aferente sectorului  " << this->sector_economic
+			<< "au intregistrat in ultimul an o performanta de " << this->randament_anual_sector << " %; "
+			<< "Acestea sunt incluse in indicele" << this->nume_indice << endl;
+		cout << "Detalii indice bursier principal: " << endl;
+		(*this).afisare_indice();
+	}
 };
 
 
@@ -426,7 +454,9 @@ public:
 
 	}
 	~portofoliu_de_investitii() {
-		delete[] a;  
+		delete[] manager;
+		delete[] a;
+		delete[] o;
 	}
 	int get_istoric() {
 		return this->istoric;
@@ -491,6 +521,9 @@ public:
 
 			expunere_actiuni = p.expunere_actiuni;
 			nr_actiuni = p.nr_actiuni;
+			if (a != NULL)
+				delete[]a;
+			a = new actiune[nr_actiuni];
 			for (int i = 0; i < nr_actiuni; i++)
 				a[i] = p.a[i];
 
@@ -521,7 +554,12 @@ public:
 	}
 	friend istream& operator>>(istream& i, portofoliu_de_investitii& p) {
 		cout << "Manager: ";
-		i >> p.manager;
+		char buffer[256];
+		if(p.manager != NULL)
+			delete[]p.manager;
+		i >> buffer;
+		p.manager = new char[strlen(buffer) + 1];
+		strcpy(p.manager, buffer);
 		cout << "Vechime pe piata";
 		i >> p.istoric;
 		cout << " Randament oferit clientilor: ";
@@ -530,6 +568,8 @@ public:
 		i >> p.expunere_actiuni;
 		cout << "Actiuni detinute: ";
 		i >> p.nr_actiuni;
+		if (p.a != NULL)
+			delete[]p.a;
 		p.a = new actiune[p.nr_actiuni];
 		for (int j = 0; j < p.nr_actiuni; j++) {
 			cout << "actiunea " << j << endl;
@@ -540,6 +580,8 @@ public:
 		i >> p.expunere_obligatiuni;
 		cout << "Obligatiuni detinute";
 		i >> p.nr_obligatiuni;
+		if (p.o != NULL)
+			delete[]p.o;
 		p.o = new obligatiune[p.nr_obligatiuni];
 		for (int j = 0; j < p.nr_actiuni; j++) {
 			cout << "obligatiune " << j << endl;
@@ -565,6 +607,12 @@ public:
 	}
 	friend ifstream& operator>>(ifstream& file, portofoliu_de_investitii& p) {
 		cout << "Manager: ";
+		char buffer[256];
+		if (p.manager != NULL)
+			delete[]p.manager;
+		file >> buffer;
+		p.manager = new char[strlen(buffer) + 1];
+		strcpy(p.manager, buffer);
 		file >> p.manager;
 		cout << "Vechime pe piata";
 		file >> p.istoric;
@@ -574,6 +622,8 @@ public:
 		file >> p.expunere_actiuni;
 		cout << "Actiuni detinute: ";
 		file >> p.nr_actiuni;
+		if (p.a != NULL)
+			delete[]p.a;
 		p.a = new actiune[p.nr_actiuni];
 		for (int j = 0; j < p.nr_actiuni; j++) {
 			cout << "actiunea " << j << endl;
@@ -584,6 +634,8 @@ public:
 		file >> p.expunere_obligatiuni;
 		cout << "Obligatiuni detinute";
 		file >> p.nr_obligatiuni;
+		if (p.o != NULL)
+			delete[]p.o;
 		p.o = new obligatiune[p.nr_obligatiuni];
 		for (int j = 0; j < p.nr_actiuni; j++) {
 			cout << "obligatiune " << j << endl;
@@ -593,13 +645,16 @@ public:
 		return file;
 	}
 
-	explicit operator float() {					//afiseaza randamentul mediu recent al actiunilor detinute in portofoliu
+	explicit operator float() {//afiseaza randamentul mediu recent al actiunilor detinute in portofoliu
+		if (this->nr_actiuni == 0) {
+			cout << "Nu exista detineri in portofoliu";
+			return 0.0f;
+		}
 		float s = 0;
 		for (int i = 0; i < nr_actiuni; i++)
 			s += a[i].get_randament();
-		s /= nr_actiuni;
 
-		return s;
+		return (float)(s / this->nr_actiuni);
 	}
 
 	portofoliu_de_investitii operator+( actiune& ac) {
@@ -608,7 +663,7 @@ public:
 		actiune* p_auxiliar = new actiune[aux.nr_actiuni + 1];
 		for (int i = 0; i < aux.nr_actiuni - 1; i++)
 			p_auxiliar[i] = aux.a[i];
-		p_auxiliar[nr_actiuni] = ac;
+		p_auxiliar[aux.nr_actiuni] = ac;
 		delete[]aux.a;
 		aux.a = p_auxiliar;
 		return aux;
@@ -634,10 +689,10 @@ public:
 void main()
 {
 
-	
+
 	/* actiune actiune1;
 	 actiune1.afisare_info_actiune();
-	 
+
 	 actiune actiune2(2345, 170.5f);
 	 actiune2.afisare_info_actiune();
 
@@ -666,7 +721,7 @@ void main()
 	 //liniile comentate mai jos sunt aferente fazei 2 a proiectului
 
 	/*actiune a1;
-	
+
 	cout << "Volum Mediu: " << a1.get_volum() << endl;
 	cout << "Pret: " << a1.get_pret() << endl;
 	cout << "Randament Anual: " << a1.get_randament() << "%" << endl;
@@ -681,7 +736,7 @@ void main()
 	cout << "Info copiat din a1 in a2:" << endl;
 	a2.afisare_info_actiune();
 	process_actiune(a1);
-	
+
 	obligatiune o1;
 	cout << "Maturitate: " << o1.maturitate << " years" << endl;
 	cout << "Dobanda: " << o1.dobanda << "%" << endl;
@@ -705,21 +760,8 @@ void main()
 	process_indice_de_actiuni(i1);*/
 
 
-	//actiune actiuni[3];
-	//actiuni[0] = actiune(strdup("Tesla"), 3500, 219.96f, 30.5f);
-	//actiuni[1] = actiune(strdup("Apple"), 5000, 150.75f, 20.0f);
-	//actiuni[2] = actiune(strdup("Microsoft"), 3000, 180.0f, 15.5f);
-	//cout << "vectorul declarat de obiecte de tip actiune este: " << endl;
-	//for (int i = 0; i < 3; i++)
-	//	actiuni[i].afisare_info_actiune();
 
-	//obligatiune obligatiuni[3];
-	//obligatiuni[0] = obligatiune(strdup("US Treasury"), 4.5f);
-	//obligatiuni[1] = obligatiune(strdup("UE"), 10, 5.8f);
-	//obligatiuni[2] = obligatiune(strdup("Guv. Romaniei"), 3, 7.2f);
-	//cout << endl << "vectorul declarat de obiecte de tip obligatiune este: " << endl;
-	//for (int i = 0; i < 3; i++)
-	//	obligatiuni[i].afisare_info_obligatiune();
+
 
 	//indice_de_actiuni indici[3];
 	//indici[0] = indice_de_actiuni(strdup("S&P 500 "), 4780, 19.8f, 11.0f);
@@ -762,7 +804,7 @@ void main()
 	//for (int i = 0; i < 3; i++)
 	//	a[i].afisare_info_actiune();
 
-	actiune ac;
+	//actiune ac;
 	//cin >> ac; ac.afisare_info_actiune();
 
 	//obligatiune x;
@@ -771,13 +813,55 @@ void main()
 	//portofoliu_de_investitii p;
 	//cin >> p; p.afisare_info_portofoliu();
 
-	fstream fisier("Fisier_binar.txt", ios::in | ios::binary);
-	//fisier.read((char*)&ac, sizeof(ac));  - modalitate gresita
-	fisier.close();
+	//fstream fisier("Fisier_binar.txt", ios::in | ios::binary);
+	////fisier.read((char*)&ac, sizeof(ac));  - modalitate gresita
+	//fisier.close();
 
-	cout << ac;
+	// << ac << endl;
 
-	fstream fisier2("Fisier_binar.txt", ios::in | ios::binary);
-	//fisier.write((char*)&ac, sizeof(int));  -  modalitate gresita
-	fisier2.close();
+	//fstream fisier2("Fisier_binar.txt", ios::in | ios::binary);
+	////fisier.write((char*)&ac, sizeof(int));  -  modalitate gresita
+	//fisier2.close();
+
+	//char* numeindice = new char(strlen("BET"));
+	//strcpy(numeindice, "BET");
+
+	/*indice_de_actiuni_de_sector SP_energy("Energie", 13.5);
+	SP_energy.afisare();*/
+
+	actiune* actiuni;
+	actiuni = new actiune[3];
+	actiuni[0] = actiune(strdup("Tesla"), 3500, 219.96f, 30.5f);
+	actiuni[1] = actiune(strdup("Apple"), 5000, 150.75f, 20.0f);
+	actiuni[2] = actiune(strdup("Microsoft"), 3000, 180.0f, 15.5f);
+	cout << "vectorul declarat de obiecte de tip actiune este: " << endl;
+	for (int i = 0; i < 3; i++)
+		actiuni[i].afisare_info_actiune();
+
+
+	obligatiune* obligatiuni;
+	obligatiuni = new obligatiune[3];
+	obligatiuni[0] = obligatiune(strdup("US Treasury"), 4.5f);
+	obligatiuni[1] = obligatiune(strdup("UE"), 10, 5.8f);
+	obligatiuni[2] = obligatiune(strdup("Guv. Romaniei"), 3, 7.2f);
+	cout << endl << "vectorul declarat de obiecte de tip obligatiune este: " << endl;
+	for (int i = 0; i < 3; i++)
+		obligatiuni[i].afisare_info_obligatiune(); obligatiuni->afisare_risc();
+
+	cout << endl << endl;
+
+
+	indice_de_actiuni BET(strdup("BET"), 20, 13500, 21.5f, 14.5f);
+	BET.afisare_indice();
+
+	/*indice_de_actiuni_de_sector BET_energie("Energie", 20);
+	BET_energie.afisare();*/
+
+	//portofoliu_de_investitii p(strdup("Administrator"), 25, 10, 60, 40, 3, 3, actiuni, obligatiuni);
+	//cout << p;
+	//cout << (float)p;
+
+	//actiune a(strdup("Amazon"), 234561, 150, 50);
+	//p = p + a;
+	//cout << p;
 }
